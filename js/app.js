@@ -1,14 +1,8 @@
 const App = React.createClass({
     getInitialState: function () {
         return {
-            isEditor: true,
             elements: []
         }
-    },
-    toggle: function () {
-        this.setState({
-            isEditor: !this.state.isEditor
-        })
     },
     addElement: function (element) {
         const elements = this.state.elements;
@@ -22,32 +16,28 @@ const App = React.createClass({
         this.setState({elements});
     },
     render: function () {
-        const isEditor = this.state.isEditor;
-
         return <div>
-        <div className="header">
-            <button onClick={this.toggle}>{isEditor ? "preview" : "edit"}</button>
-        </div>
-        <div className={isEditor ? "" : "hidden"}>
-            <Editor elements={this.state.elements} onAdd={this.addElement} onDelete={this.deleteElement}/>
-        </div>
-        <div className={isEditor ? "hidden" : ""}>
-            <Previewer elements={this.state.elements}/>
-        </div>
-
+            <ReactRouter.Link to="/preview">
+                preview
+            </ReactRouter.Link>
+            {this.props.children && React.cloneElement(this.props.children, {
+                    elements: this.state.elements,
+                    onAdd: this.addElement,
+                    onDelete: this.deleteElement
+                })
+            }
         </div>
     }
 });
 const Editor = React.createClass({
     render: function () {
         return <div>
-
-        <div id="display">
-            < Right elements={this.props.elements} onDelete={this.props.onDelete}/>
-        </div>
-        <div id="select">
-            < Left onAdd={this.props.onAdd}/>
-        </div>
+            <div id="display">
+                < Right elements={this.props.elements} onDelete={this.props.onDelete}/>
+            </div>
+            <div id="select">
+                < Left onAdd={this.props.onAdd}/>
+            </div>
         </div>
     }
 });
@@ -58,7 +48,7 @@ const Left = React.createClass({
     },
     render: function () {
         return <div>
-        <input type="radio" name="element" value="text"/>text
+            <input type="radio" name="element" value="text"/>text
             <br />
             <input type="radio" name="element" value="date"/>date
             <br />
@@ -73,37 +63,46 @@ const Right = React.createClass({
     },
     render: function () {
         const elements = this.props.elements.map((ele, index) => {
-                return <div key={index}>
-            <input type={ele}/>
-            <button type="button" className="btn btn-danger btn-sm"
-        onClick={this.remove.bind(this.index)}>x
-        </button>
-        </div>
+            return <div key={index}>
+                <input type={ele}/>
+                <button type="button" className="btn btn-danger btn-sm"
+                        onClick={this.remove.bind(this.index)}>x
+                </button>
+            </div>
 
-    })
+        })
         return <div>
-        {elements}
+            {elements}
         </div>
     }
 });
 const Previewer = React.createClass({
     render: function () {
         const elements = this.props.elements.map((ele, index) => {
-                return <div key={index}>
-            <input type={ele}/>
+            return <div key={index}>
+                <input type={ele}/>
             </div>
 
-    })
+        })
         return <div className="row">
+            <ReactRouter.Link to="/Edit">
+                Edit
+            </ReactRouter.Link>
             <div id="preview">
-            <div className="container">
-            {elements}
+                <div className="container">
+                    {elements}
+                </div>
+                <button className="btn btn-primary">submit</button>
             </div>
-            <button className="btn btn-primary">submit</button>
-            </div>
-            </div>
-
+        </div>
 
     }
 });
-ReactDOM.render(<App />, document.getElementById('content'));
+ReactDOM.render(<ReactRouter.Router>
+        <ReactRouter.Route path="/" component={App}>
+            <ReactRouter.IndexRoute component={Editor}/>
+            <ReactRouter.Route path="Preview" component={Previewer}/>
+            <ReactRouter.Route path="Edit" component={Editor}/>
+        </ReactRouter.Route>
+    </ReactRouter.Router>
+    , document.getElementById('content'));
